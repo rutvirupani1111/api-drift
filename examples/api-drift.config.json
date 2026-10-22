@@ -1,0 +1,36 @@
+{
+  "$schema": "../schema/config.schema.json",
+
+  // Where the learned contract lives. Commit it.
+  "baseline": ".api-drift/baseline.json",
+
+  "defaults": {
+    "timeout": 10000,
+    "samples": 2,
+    "headers": { "accept": "application/json" }
+  },
+
+  "endpoints": [
+    {
+      "name": "GitHub repo",
+      "url": "https://api.github.com/repos/nodejs/node",
+      // ${VAR} comes from the environment. ${VAR:-} falls back to empty, and an empty
+      // header is not sent: set GITHUB_AUTH="Bearer <token>" to authenticate.
+      "headers": { "authorization": "${GITHUB_AUTH:-}" }
+    },
+    { "name": "npm: react", "url": "https://registry.npmjs.org/react/latest" },
+    {
+      "name": "Weather (Mumbai)",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=19.07&longitude=72.88&current_weather=true"
+    }
+  ],
+
+  "failOn": "breaking",
+
+  "diff": {
+    // Values that legitimately come and go.
+    "ignore": ["$.current_weather.is_day"],
+    // A new field is not worth a notification for this project.
+    "severity": { "added": "ignore" }
+  }
+}

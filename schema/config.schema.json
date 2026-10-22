@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://unpkg.com/api-drift/schema/config.schema.json",
+  "title": "api-drift config",
+  "description": "Configuration for the api-drift CLI (api-drift.config.json). JSON with comments is allowed.",
+  "type": "object",
+  "required": ["endpoints"],
+  "definitions": {
+    "endpointOptions": {
+      "type": "object",
+      "properties": {
+        "method": { "type": "string", "pattern": "^[A-Za-z]+$", "description": "HTTP method. Default GET." },
+        "headers": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Request headers. ${ENV_VAR} and ${ENV_VAR:-default} are substituted."
+        },
+        "body": { "description": "Request body. Objects are sent as JSON." },
+        "samples": { "type": "integer", "minimum": 1, "maximum": 100, "description": "Calls per run. Default 1." },
+        "timeout": { "type": "number", "exclusiveMinimum": 0, "description": "Request timeout in ms. Default 10000." },
+        "keepQuery": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Query parameters that distinguish endpoints (kept in the endpoint key)."
+        }
+      }
+    },
+    "severity": { "enum": ["breaking", "risky", "info", "ignore"] }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "baseline": { "type": "string", "description": "Baseline file, relative to this config. Default .api-drift/baseline.json." },
+    "defaults": { "$ref": "#/definitions/endpointOptions", "description": "Applied to every endpoint." },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          { "$ref": "#/definitions/endpointOptions" },
+          {
+            "type": "object",
+            "required": ["url"],
+            "properties": {
+              "name": { "type": "string", "description": "Friendly name shown in reports and matched by --only." },
+              "key": { "type": "string", "description": "Override the endpoint key." },
+              "url": { "type": "string", "description": "Absolute http(s) URL. ${ENV_VAR} is substituted." }
+            }
+          }
+        ]
+      }
+    },
+    "failOn": { "enum": ["breaking", "risky", "info", "never"], "description": "Exit 1 at this severity. Default breaking." },
+    "concurrency": { "type": "integer", "minimum": 1, "description": "Endpoints called in parallel. Default 4." },
+    "maxPayloadBytes": { "type": "number", "exclusiveMinimum": 0, "description": "Larger responses fail the endpoint. Default 1000000." },
+    "infer": {
+      "type": "object",
+      "properties": {
+        "maxDepth": { "type": "integer", "minimum": 1 },
+        "maxProperties": { "type": "integer", "minimum": 1 },
+        "maxArrayItems": { "type": "integer", "minimum": 1 },
+        "enums": { "type": "boolean", "description": "Capture low-cardinality code-like strings as enums. Default true." },
+        "enumMaxValues": { "type": "integer", "minimum": 1 },
+        "enumExclude": {
+          "description": "Regular expression (string) of keys never captured as enum values, or false to capture every key.",
+          "oneOf": [{ "type": "string" }, { "const": false }]
+        },
+        "formats": { "type": "boolean" },
+        "ranges": { "type": "boolean", "description": "Record numeric min/max and string lengths. Default false." },
+        "dynamicKeys": { "type": "boolean" }
+      }
+    },
+    "diff": {
+      "type": "object",
+      "properties": {
+        "ignore": { "type": "array", "items": { "type": "string" }, "description": "Paths to ignore. * is a wildcard." },
+        "severity": {
+          "type": "object",
+          "description": "Re-grade change kinds or silence them with \"ignore\".",
+          "propertyNames": {
+            "enum": [
+              "removed",
+              "type-changed",
+              "status-changed",
+              "nullable",
+              "optional",
+              "enum-added",
+              "format-changed",
+              "number-narrowed",
+              "number-widened",
+              "emptied",
+              "added",
+              "added-optional",
+              "enum-removed",
+              "format-gained",
+              "type-learned",
+              "negative",
+              "endpoint-added",
+              "endpoint-removed"
+            ]
+          },
+          "additionalProperties": { "$ref": "#/definitions/severity" }
+        },
+        "enumMinSamples": { "type": "integer", "minimum": 1 },
+        "minSamples": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

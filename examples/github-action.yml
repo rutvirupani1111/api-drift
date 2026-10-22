@@ -1,0 +1,39 @@
+# .github/workflows/api-drift.yml
+#
+# Checks the APIs you depend on every morning and on every pull request.
+# The baseline (.api-drift/baseline.json) is committed: create it once with
+#   npx api-drift init <url...> && npx api-drift snapshot
+name: API drift
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # every day at 06:17 UTC
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check third-party API contracts
+        id: drift
+        uses: rutvirupani1111/api-drift@v0 # the repository hosting the action; or ./ when it lives in this repository
+        with:
+          config: api-drift.config.json
+          fail-on: breaking # breaking | risky | info | never
+        env:
+          GITHUB_AUTH: Bearer ${{ secrets.GITHUB_TOKEN }} # available as ${GITHUB_AUTH} in the config
+
+      - name: Use the results
+        if: always()
+        run: |
+          echo "breaking=${{ steps.drift.outputs.breaking }} risky=${{ steps.drift.outputs.risky }} info=${{ steps.drift.outputs.info }}"

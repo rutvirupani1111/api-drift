@@ -1,0 +1,102 @@
+name: api-drift
+description: Detect breaking changes in the third-party APIs you depend on, from nothing but their responses.
+author: Rutvi Rupani
+branding:
+  icon: activity
+  color: orange
+
+inputs:
+  config:
+    description: Path to the api-drift config file.
+    default: api-drift.config.json
+  baseline:
+    description: Baseline file. Defaults to the one named in the config.
+    default: ''
+  fail-on:
+    description: Fail the step at this severity or worse. One of breaking, risky, info, never.
+    default: breaking
+  only:
+    description: Comma-separated filters; only endpoints whose name, URL or key contains one are checked.
+    default: ''
+  samples:
+    description: Calls per endpoint (overrides the config).
+    default: ''
+  working-directory:
+    description: Directory to run in.
+    default: .
+  version:
+    description: >-
+      Which api-drift to run when the action checkout has no built dist/cli.js. "source" builds it
+      from the action's own checkout (works before the package is on npm); any other value is an
+      npm version or tag run with npx.
+    default: source
+
+outputs:
+  exit-code:
+    description: 0 = no drift at or above fail-on, 1 = drift found, 2 = could not run (config, baseline or network error).
+    value: ${{ steps.check.outputs.exit-code }}
+  breaking:
+    description: Number of breaking changes.
+    value: ${{ steps.check.outputs.breaking }}
+  risky:
+    description: Number of risky changes.
+    value: ${{ steps.check.outputs.risky }}
+  info:
+    description: Number of informational changes.
+    value: ${{ steps.check.outputs.info }}
+  report:
+    description: Path of the JSON report.
+    value: ${{ steps.check.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - name: api-drift check
+      id: check
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      # Inputs are passed through the environment, never interpolated into the script.
+      env:
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_BASELINE: ${{ inputs.baseline }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_ONLY: ${{ inputs.only }}
+        INPUT_SAMPLES: ${{ inputs.samples }}
+        INPUT_VERSION: ${{ inputs.version }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set +e
+        if [ ! -f "$ACTION_PATH/dist/cli.js" ] && [ "$INPUT_VERSION" = "source" ]; then
+          echo "::group::Building api-drift from the action checkout"
+          (cd "$ACTION_PATH" && npm ci --no-audit --no-fund --ignore-scripts && npm run build) 1>&2
+          echo "::endgroup::"
+        fi
+        if [ -f "$ACTION_PATH/dist/cli.js" ]; then
+          CLI=(node "$ACTION_PATH/dist/cli.js")
+        else
+          CLI=(npx --yes "api-drift@$INPUT_VERSION")
+        fi
+        REPORT_MD="$RUNNER_TEMP/api-drift-report.md"
+        REPORT_JSON="$RUNNER_TEMP/api-drift-report.json"
+        rm -f "$REPORT_MD" "$REPORT_JSON"
+        ARGS=(check --format markdown --fail-on "$INPUT_FAIL_ON" --config "$INPUT_CONFIG" --json-file "$REPORT_JSON")
+        if [ -n "$INPUT_BASELINE" ]; then ARGS+=(--baseline "$INPUT_BASELINE"); fi
+        if [ -n "$INPUT_ONLY" ]; then ARGS+=(--only "$INPUT_ONLY"); fi
+        if [ -n "$INPUT_SAMPLES" ]; then ARGS+=(--samples "$INPUT_SAMPLES"); fi
+
+        "${CLI[@]}" "${ARGS[@]}" > "$REPORT_MD"
+        code=$?
+
+        cat "$REPORT_MD"
+        if [ -s "$REPORT_MD" ]; then
+          cat "$REPORT_MD" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "### api-drift could not run (exit $code). See the step log for the error." >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        if [ -f "$REPORT_JSON" ]; then
+          echo "report=$REPORT_JSON" >> "$GITHUB_OUTPUT"
+          node -e 'const s = require(process.argv[1]).summary; for (const k of ["breaking", "risky", "info"]) console.log(`${k}=${s[k]}`)' "$REPORT_JSON" >> "$GITHUB_OUTPUT"
+        fi
+        exit $code

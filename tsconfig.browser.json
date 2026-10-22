@@ -1,0 +1,11 @@
+{
+  // Compiles every browser-facing entry point WITHOUT Node typings.
+  // Any accidental import of node:* or use of `process`/`Buffer` in
+  // api-drift, api-drift/core, api-drift/report or api-drift/axios fails this check.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src/core", "src/runtime", "src/index.ts", "src/report.ts", "src/axios.ts", "src/version.ts", "src/globals.d.ts"]
+}

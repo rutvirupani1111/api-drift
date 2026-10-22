@@ -1,0 +1,134 @@
+{
+  "name": "api-drift",
+  "version": "0.1.0",
+  "description": "Know when the APIs you depend on change, before your users do. Learns response contracts from real traffic and reports breaking drift.",
+  "keywords": [
+    "api",
+    "drift",
+    "contract",
+    "contract-testing",
+    "schema",
+    "json",
+    "monitoring",
+    "breaking-changes",
+    "har",
+    "fetch",
+    "axios",
+    "zod",
+    "typescript"
+  ],
+  "author": "Rutvi Rupani",
+  "license": "MIT",
+  "homepage": "https://github.com/rutvirupani1111/api-drift#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rutvirupani1111/api-drift.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rutvirupani1111/api-drift/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./core": {
+      "import": {
+        "types": "./dist/core.d.ts",
+        "default": "./dist/core.js"
+      },
+      "require": {
+        "types": "./dist/core.d.cts",
+        "default": "./dist/core.cjs"
+      }
+    },
+    "./report": {
+      "import": {
+        "types": "./dist/report.d.ts",
+        "default": "./dist/report.js"
+      },
+      "require": {
+        "types": "./dist/report.d.cts",
+        "default": "./dist/report.cjs"
+      }
+    },
+    "./axios": {
+      "import": {
+        "types": "./dist/axios.d.ts",
+        "default": "./dist/axios.js"
+      },
+      "require": {
+        "types": "./dist/axios.d.cts",
+        "default": "./dist/axios.cjs"
+      }
+    },
+    "./node": {
+      "import": {
+        "types": "./dist/node.d.ts",
+        "default": "./dist/node.js"
+      },
+      "require": {
+        "types": "./dist/node.d.cts",
+        "default": "./dist/node.cjs"
+      }
+    },
+    "./schema.json": "./schema/config.schema.json",
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "core": [
+        "./dist/core.d.ts"
+      ],
+      "report": [
+        "./dist/report.d.ts"
+      ],
+      "axios": [
+        "./dist/axios.d.ts"
+      ],
+      "node": [
+        "./dist/node.d.ts"
+      ]
+    }
+  },
+  "bin": {
+    "api-drift": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "schema",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.browser.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "size": "node scripts/size.mjs",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run size",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "esbuild": "^0.27.0",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}
