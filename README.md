@@ -213,7 +213,7 @@ spec for you:
 ```console
 $ npx api-drift import-har session.har            # or: npx api-drift snapshot
 $ npx api-drift openapi --out openapi.json
-✔ Wrote OpenAPI 3.1 (JSON): 3 paths, 4 operations to openapi.json
+✔ Wrote OpenAPI 3.1 (JSON): 3 paths, 3 operations to openapi.json
 $ npx api-drift openapi --out openapi.yaml --title "Shop API"   # .yaml/.yml implies --yaml
 ```
 
