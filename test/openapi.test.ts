@@ -31,7 +31,9 @@ const SCHEMA_KEYWORDS = new Set([
 /** The OpenAPI 3.1 + JSON Schema 2020-12 rules this exporter must honour. Returns every violation. */
 function validateOpenApi(doc: unknown): string[] {
   const errors: string[] = [];
-  const err = (where: string, msg: string) => errors.push(`${where}: ${msg}`);
+  const err = (where: string, msg: string): void => {
+    errors.push(`${where}: ${msg}`);
+  };
   if (!isObj(doc)) return ['document is not an object'];
   if (typeof doc.openapi !== 'string' || !/^3\.1\.\d+$/.test(doc.openapi)) err('openapi', 'must be 3.1.x');
   const info = doc.info;
@@ -381,6 +383,8 @@ describe('toYaml', () => {
       url: 'https://api.shop.test',
       yes: 'yes',
       num: '42',
+      semver: '3.1.0',
+      float: '1.5',
       colon: 'a: b',
       hash: 'a #b',
       lead: '-x',
@@ -397,6 +401,8 @@ describe('toYaml', () => {
     expect(yaml).toContain('"yes": "yes"\n');
     expect(yaml).toContain('num: "42"\n');
     expect(yaml).toContain('"2XX": 1.5\n');
+    expect(yaml).toContain('semver: 3.1.0\n');
+    expect(yaml).toContain('float: "1.5"\n');
     expect(yaml).toContain('$ref: "#/components/schemas/X"\n');
     expect(yaml).toContain('none: {}\n');
     expect(parseYaml(yaml)).toEqual(value);
