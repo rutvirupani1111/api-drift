@@ -1,6 +1,6 @@
 {
   "name": "api-drift",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Know when the APIs you depend on change, before your users do. Learns response contracts from real traffic and reports breaking drift.",
   "keywords": [
     "api",

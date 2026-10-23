@@ -41,6 +41,7 @@ api-drift check · 3 endpoints · baseline .api-drift/baseline.json
 - [Runtime instrumentation](#runtime-instrumentation)
 - [How it works](#how-it-works)
 - [What counts as drift](#what-counts-as-drift)
+- [Got no spec? Generate one from real traffic](#got-no-spec-generate-one-from-real-traffic)
 - [CLI reference](#cli-reference)
 - [GitHub Action](#github-action)
 - [API reference](#api-reference)
@@ -203,6 +204,97 @@ Any kind can be re-graded or silenced, and any path ignored:
 }
 ```
 
+## Got no spec? Generate one from real traffic
+
+Most APIs you depend on publish no OpenAPI document, or one that stopped matching reality long
+ago. api-drift already knows the contract each endpoint actually honours, so it can write the
+spec for you:
+
+```console
+$ npx api-drift import-har session.har            # or: npx api-drift snapshot
+$ npx api-drift openapi --out openapi.json
+✔ Wrote OpenAPI 3.1 (JSON): 3 paths, 4 operations to openapi.json
+$ npx api-drift openapi --out openapi.yaml --title "Shop API"   # .yaml/.yml implies --yaml
+```
+
+| Learned | OpenAPI 3.1 |
+| --- | --- |
+| `GET api.shop.test /api/users/:id 2xx` | `paths["/api/users/{userId}"].get`, path parameter `userId` (named after the collection) |
+| status class `4xx` | `responses["4XX"]` |
+| kept query keys (`--keep-query type`) | query parameters; fixed values become an `enum`, `required` when every key had it |
+| hosts | `servers`, per path item when several hosts are present (`https`, unless the recorded example was `http`) |
+| the shape | JSON Schema 2020-12 under `components.schemas`, named like `api-drift types` (`GetApiUsersByIdResponse`) |
+| present in every sample | `required` |
+| `string<uri> \| null` | `type: [string, "null"]`, `format: uri` |
+| enum candidates (20+ samples) | `enum` (including `null` when nullable) |
+| id-keyed dictionaries (`{"1001": {...}}`) | `additionalProperties` |
+| mixed types | a type array, or `anyOf` when the variants carry their own keywords |
+
+```yaml
+paths:
+  "/api/users/{userId}":
+    get:
+      operationId: getApiUsersById
+      responses:
+        "2XX":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiUsersByIdResponse"
+          description: Observed 2xx response
+        "4XX":
+          # ...
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+components:
+  schemas:
+    GetApiUsersByIdResponse:
+      properties:
+        avatar_url:
+          format: uri
+          type:
+            - string
+            - "null"
+        created_at:
+          format: date-time
+          type: string
+        nickname:
+          type: string
+        # ...
+      required:
+        - avatar_url
+        - created_at
+        # ...
+      type: object
+```
+
+- **No example values.** No `example`/`examples`, no URLs beyond the host, no ids, timestamps or
+  sample counts. Enum values are the same code-like values `api-drift types` emits.
+- **Diffs cleanly.** Keys are sorted (the top level keeps `openapi`, `info`, `servers`, `paths`,
+  `components`), so the same baseline always produces the same bytes. Commit `openapi.json` next
+  to the baseline and `git diff` shows only contract changes.
+- **Honest about what it is.** It describes what was observed: `required` means "present in every
+  sample", `additionalProperties` is never `false`, and formats JSON Schema does not define
+  (semver, jwt, phone, ...) are kept as an `x-api-drift-format` annotation (`base64` becomes
+  `contentEncoding`).
+- The same route on several hosts (production and staging) is one operation that lists both
+  servers; its schema is the merge of what each host returned. Custom keys that are not
+  `METHOD host /path` keys are skipped with a warning.
+- YAML comes from a small built-in emitter: no dependency.
+
+From code (browser-safe, `api-drift/core`):
+
+```ts
+import { toOpenApi, openApiToJson, toYaml } from 'api-drift/core';
+
+const doc = toOpenApi(baseline, { title: 'Shop API', version: '2.0.0' });
+await writeFile('openapi.yaml', toYaml(doc)); // or openApiToJson(doc)
+```
+
 ## CLI reference
 
 ```text
@@ -214,6 +306,7 @@ check                   Call endpoints again and report drift against the baseli
 import-har <file.har>   Build a baseline from a browser HAR export
 diff <a> <b>            Diff two baselines or two JSON payloads
 types                   Generate TypeScript interfaces or Zod schemas
+openapi                 Export the learned contracts as an OpenAPI 3.1 spec
 explain [endpoint]      Print an inferred contract as a tree
 ```
 
@@ -229,6 +322,7 @@ GitHub Actions logs are coloured). Every command has `--help`.
 | `import-har <file>` | `-o, --out <file>` · `--merge` · `--include <pattern>` · `--exclude <pattern>` (hosts, `host/path` prefixes or `/regex/`) · `--keep-query a,b` · `-f, --format pretty\|json` |
 | `diff <a> <b>` | `-f, --format pretty\|json\|markdown` · `--fail-on` (default `breaking`) · `-e, --endpoint <key>` (when one side is a baseline and the other a payload) |
 | `types` | `-b, --baseline` · `-o, --out <file>` · `--zod` · `-e, --endpoint <text>` (repeatable) |
+| `openapi` | `-b, --baseline` · `-o, --out <file>` (`.yaml`/`.yml` implies `--yaml`) · `--yaml` · `--title <text>` · `--api-version <v>` · `-e, --endpoint <text>` (repeatable) |
 | `explain [endpoint]` | `-b, --baseline` · `-f, --format pretty\|json` · `--depth <n>`. Any unique part of the key or example URL selects an endpoint. |
 
 ### Config file
@@ -408,6 +502,9 @@ createBaseline(), learn(baseline, key, payload), learnShape(...), mergeBaselines
 parseBaseline(text | object), serializeBaseline(baseline)
 importHar(harTextOrObject, { include, exclude, keepQuery, keyFor, baseline })  // { baseline, stats, learnedKeys }
 generateTypes(baseline, { zod?, enumMinSamples?, header?, nameFor? }): string
+toOpenApi(baseline, { title?, version?, description?, enumMinSamples? }): OpenApiDocument
+shapeToJsonSchema(shape, { enumMinSamples? }): JsonSchema   // JSON Schema 2020-12
+openApiToJson(doc), toYaml(value): string                   // deterministic text
 ```
 
 `infer` options:
@@ -503,6 +600,7 @@ Its key (method, host, templated path, status class) is not in the baseline yet.
 | Watches production at runtime | yes, `wrapFetch` | no | no | no |
 | CI check | yes, CLI + Action | yes | yes | yes |
 | Generates TypeScript / Zod | yes | no | via other tools | via other tools |
+| Generates an OpenAPI spec | yes, 3.1 from observed traffic | no | n/a (consumes specs) | yes |
 | Runtime dependencies | none | several | n/a (CLI) | n/a (CLI) |
 
 Use Pact when you own both sides and want contracts enforced before deploy. Use an OpenAPI diff
@@ -513,7 +611,6 @@ without specs.
 ## Roadmap
 
 - Discriminated unions: tag-aware merging for arrays of heterogeneous objects (`type: "a" | "b"`).
-- Export learned contracts as OpenAPI / JSON Schema.
 - Response header contracts (rate-limit headers, deprecation and sunset headers).
 - GraphQL: key operations by operation name.
 - Store adapters for Redis, Cloudflare KV and Vercel KV.

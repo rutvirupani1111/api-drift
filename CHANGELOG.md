@@ -4,6 +4,28 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - Unreleased
+
+### Added
+- OpenAPI 3.1 export: `api-drift openapi [--out openapi.json] [--yaml] [--title ...]
+  [--api-version ...] [--endpoint ...]` and `toOpenApi(baseline, options)` in `api-drift/core`.
+  - Endpoint keys become paths and operations: `:id` segments turn into named path parameters
+    (`/repos/{repoId}/pulls/{pullId}`), kept query keys into query parameters (fixed values as an
+    `enum`), status classes into `2XX`/`4XX`/`5XX` responses.
+  - Hosts become `servers` (per path item when several hosts are present). The same route on
+    several hosts is one operation whose schema merges what each host returned.
+  - Shapes become JSON Schema 2020-12 under `components.schemas` (named like `api-drift types`):
+    types, formats, enums, `required` from presence counts, nullability as type arrays, array
+    items, `additionalProperties` for id-keyed dictionaries, `anyOf` for rich unions.
+  - No example values, URLs, ids, timestamps or sample counts. Keys are sorted, so the output is
+    byte-for-byte deterministic and diffs cleanly in git.
+- `shapeToJsonSchema`, `openApiPath`, `openApiToJson`, `unmappedKeys` and a dependency-free YAML
+  emitter, `toYaml`, all exported from `api-drift/core`.
+
+### Changed
+- `api-drift/core` size budget raised from 12 KB to 14 KB min+gzip (13.5 KB with the exporter).
+  `api-drift`, `api-drift/report` and `api-drift/axios` are unchanged.
+
 ## [0.1.0] - Unreleased
 
 First release.
