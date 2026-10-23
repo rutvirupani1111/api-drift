@@ -9,6 +9,7 @@ import type { Matcher } from '../core/match';
 import { buildReport, renderJson, renderMarkdown, renderText, type DriftReport, type EndpointResult, type FailOn } from '../core/report';
 import { padVisible, type Style } from '../core/style';
 import { explainEntry } from '../core/tree';
+import { openApiToJson, toOpenApi, toYaml, unmappedKeys } from '../core/openapi';
 import { generateTypes } from '../core/typegen';
 import { sortedKeys } from '../core/util';
 import { readBaseline, writeBaseline, writeFileAtomic } from '../node/baseline-io';
@@ -445,6 +446,57 @@ const types: Command = {
   },
 };
 
+const openapi: Command = {
+  name: 'openapi',
+  usage: 'openapi [options]',
+  summary: 'Export the learned contracts as an OpenAPI 3.1 spec',
+  description:
+    'Write an OpenAPI 3.1 document (JSON Schema 2020-12) built from observed traffic: one path per templated route, path parameters for :id segments, one response per status class, servers from the hosts seen. Output is sorted and contains no example values, so it diffs cleanly in git.',
+  flags: { string: ['baseline', 'config', 'out', 'title', 'api-version'], multiple: ['endpoint'], boolean: ['yaml'], alias: COMMON_ALIAS },
+  options: [
+    BASELINE_OPT,
+    CONFIG_OPT,
+    ['-o, --out <file>', 'Write to a file instead of stdout (.yaml/.yml implies --yaml)'],
+    ['--yaml', 'Emit YAML instead of JSON'],
+    ['--title <text>', 'info.title (default: the host, or "Observed API" for several hosts)'],
+    ['--api-version <v>', 'info.version (default: 1.0.0)'],
+    ['-e, --endpoint <text>', 'Only endpoints whose key contains this (repeatable)'],
+  ],
+  examples: ['api-drift openapi --out openapi.json', 'api-drift openapi --yaml --title "Shop API" > openapi.yaml'],
+  async run(ctx) {
+    const file = await baselinePathFor(ctx, flag(ctx, 'baseline'));
+    const baseline = await requireBaseline(ctx, file);
+    if (typeof baseline === 'number') return baseline;
+    const filters = list(ctx, 'endpoint');
+    const picked = createBaseline();
+    for (const k of sortedKeys(baseline.endpoints)) {
+      if (!filters.length || filters.some((f) => k.includes(f))) picked.endpoints[k] = baseline.endpoints[k];
+    }
+    if (Object.keys(picked.endpoints).length === 0) return ctx.fail('No endpoint matches the --endpoint filter');
+    for (const k of unmappedKeys(picked)) ctx.warn(`Skipped "${k}": not a METHOD host /path endpoint key`);
+    let enumMinSamples: number | undefined;
+    const configPath = resolve(ctx.io.cwd, flag(ctx, 'config') ?? DEFAULT_CONFIG_FILE);
+    if (existsSync(configPath)) enumMinSamples = libraryOptions((await loadConfig(configPath, ctx.io.cwd)).config).diff.enumMinSamples;
+    const doc = toOpenApi(picked, { title: flag(ctx, 'title'), version: flag(ctx, 'api-version'), enumMinSamples });
+    const out = flag(ctx, 'out');
+    const yaml = !!ctx.args.flags.yaml || (!!out && /\.ya?ml$/i.test(out));
+    const text = yaml ? toYaml(doc) : openApiToJson(doc);
+    if (!out) {
+      ctx.io.stdout.write(text);
+      return 0;
+    }
+    const target = resolve(ctx.io.cwd, out);
+    await writeFileAtomic(target, text);
+    const { style: s } = ctx;
+    const ops = Object.values(doc.paths).reduce((n, item) => n + Object.keys(item).filter((m) => m !== 'parameters' && m !== 'servers').length, 0);
+    const paths = Object.keys(doc.paths).length;
+    ctx.out(
+      `${s.paint('ok', s.sym.ok)} Wrote OpenAPI 3.1 (${yaml ? 'YAML' : 'JSON'}): ${paths} path${paths === 1 ? '' : 's'}, ${ops} operation${ops === 1 ? '' : 's'} to ${s.paint('bold', ctx.path(target))}`,
+    );
+    return 0;
+  },
+};
+
 const explain: Command = {
   name: 'explain',
   usage: 'explain [endpoint] [options]',
@@ -504,7 +556,7 @@ const explain: Command = {
   },
 };
 
-const COMMANDS: Command[] = [init, snapshot, check, importHarCmd, diffCmd, types, explain];
+const COMMANDS: Command[] = [init, snapshot, check, importHarCmd, diffCmd, types, openapi, explain];
 
 // ---------------------------------------------------------------- help
 

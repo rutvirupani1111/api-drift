@@ -11,7 +11,7 @@ const { version } = JSON.parse(readFileSync(new URL('../package.json', import.me
 const KB = 1024;
 const entries = [
   { name: 'api-drift', file: 'src/index.ts', budget: 12 * KB },
-  { name: 'api-drift/core', file: 'src/core/index.ts', budget: 12 * KB },
+  { name: 'api-drift/core', file: 'src/core/index.ts', budget: 14 * KB },
   { name: 'api-drift/report', file: 'src/report.ts', budget: 6 * KB },
   { name: 'api-drift/axios', file: 'src/axios.ts', budget: 2 * KB },
   { name: 'api-drift/node', file: 'src/node.ts' },

@@ -1,0 +1,424 @@
+{
+  "version": 1,
+  "generator": "api-drift@0.1.0",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
+  "endpoints": {
+    "GET admin.shop.test / 2xx": {
+      "example": "https://admin.shop.test/",
+      "samples": 1,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "array",
+        "count": 1,
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "kind": "string",
+          "count": 2,
+          "formats": [
+            "plain"
+          ],
+          "values": [
+            "a",
+            "b"
+          ]
+        }
+      }
+    },
+    "GET api.shop.test /api/search?page=:id&type=products 2xx": {
+      "example": "https://api.shop.test/api/search",
+      "samples": 1,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 1,
+        "properties": {
+          "next": {
+            "kind": "null",
+            "count": 1
+          },
+          "results": {
+            "kind": "array",
+            "count": 1,
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "kind": "object",
+              "count": 1,
+              "properties": {
+                "id": {
+                  "kind": "integer",
+                  "count": 1
+                },
+                "name": {
+                  "kind": "string",
+                  "count": 1,
+                  "formats": [
+                    "plain"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GET api.shop.test /api/search?type=users 2xx": {
+      "example": "https://api.shop.test/api/search",
+      "samples": 1,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 1,
+        "properties": {
+          "next": {
+            "kind": "string",
+            "count": 1,
+            "formats": [
+              "plain"
+            ],
+            "values": [
+              "abc"
+            ]
+          },
+          "results": {
+            "kind": "array",
+            "count": 1,
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "kind": "object",
+              "count": 1,
+              "properties": {
+                "email": {
+                  "kind": "string",
+                  "count": 1,
+                  "formats": [
+                    "email"
+                  ]
+                },
+                "id": {
+                  "kind": "integer",
+                  "count": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GET api.shop.test /api/users/:id 2xx": {
+      "example": "https://api.shop.test/api/users/0",
+      "samples": 24,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 24,
+        "properties": {
+          "address": {
+            "kind": "object",
+            "count": 24,
+            "properties": {
+              "city": {
+                "kind": "string",
+                "count": 24,
+                "formats": [
+                  "plain"
+                ]
+              },
+              "zip": {
+                "kind": "string",
+                "count": 24,
+                "formats": [
+                  "numeric-string"
+                ]
+              }
+            }
+          },
+          "avatar": {
+            "kind": "string",
+            "count": 24,
+            "formats": [
+              "plain"
+            ]
+          },
+          "created_at": {
+            "kind": "string",
+            "count": 24,
+            "formats": [
+              "date-time"
+            ]
+          },
+          "deleted_at": {
+            "kind": "string",
+            "count": 24,
+            "formats": [
+              "date-time",
+              "empty"
+            ]
+          },
+          "email": {
+            "kind": "string",
+            "count": 24,
+            "formats": [
+              "email"
+            ]
+          },
+          "flags": {
+            "kind": "object",
+            "count": 24,
+            "properties": {},
+            "additional": {
+              "kind": "boolean",
+              "count": 48
+            }
+          },
+          "homepage": {
+            "kind": "union",
+            "variants": [
+              {
+                "kind": "null",
+                "count": 12
+              },
+              {
+                "kind": "string",
+                "count": 12,
+                "formats": [
+                  "uri"
+                ]
+              }
+            ]
+          },
+          "id": {
+            "kind": "integer",
+            "count": 24
+          },
+          "nickname": {
+            "kind": "string",
+            "count": 8,
+            "formats": [
+              "plain"
+            ]
+          },
+          "notes": {
+            "kind": "array",
+            "count": 24,
+            "minItems": 0,
+            "maxItems": 0
+          },
+          "ref": {
+            "kind": "union",
+            "variants": [
+              {
+                "kind": "integer",
+                "count": 16
+              },
+              {
+                "kind": "string",
+                "count": 8,
+                "formats": [
+                  "plain"
+                ],
+                "values": [
+                  "r0",
+                  "r12",
+                  "r15",
+                  "r18",
+                  "r21",
+                  "r3",
+                  "r6",
+                  "r9"
+                ]
+              }
+            ]
+          },
+          "score": {
+            "kind": "number",
+            "count": 24,
+            "integral": 0
+          },
+          "status": {
+            "kind": "string",
+            "count": 24,
+            "formats": [
+              "plain"
+            ],
+            "values": [
+              "active",
+              "banned",
+              "paused"
+            ]
+          },
+          "tags": {
+            "kind": "array",
+            "count": 24,
+            "minItems": 0,
+            "maxItems": 2,
+            "items": {
+              "kind": "string",
+              "count": 36,
+              "formats": [
+                "plain"
+              ],
+              "values": [
+                "x",
+                "y"
+              ]
+            }
+          },
+          "tier": {
+            "kind": "union",
+            "variants": [
+              {
+                "kind": "null",
+                "count": 5
+              },
+              {
+                "kind": "string",
+                "count": 19,
+                "formats": [
+                  "plain"
+                ],
+                "values": [
+                  "gold",
+                  "silver"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "GET api.shop.test /api/users/:id 4xx": {
+      "example": "https://api.shop.test/api/users/999",
+      "samples": 1,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 1,
+        "properties": {
+          "code": {
+            "kind": "integer",
+            "count": 1
+          },
+          "error": {
+            "kind": "string",
+            "count": 1,
+            "formats": [
+              "plain"
+            ]
+          }
+        }
+      }
+    },
+    "GET localhost:3000 /health 2xx": {
+      "example": "http://localhost:3000/health",
+      "samples": 2,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 2,
+        "properties": {
+          "ok": {
+            "kind": "boolean",
+            "count": 2
+          },
+          "uptime": {
+            "kind": "number",
+            "count": 2,
+            "integral": 1
+          }
+        }
+      }
+    },
+    "GET staging.shop.test /api/users/:id 2xx": {
+      "example": "https://staging.shop.test/api/users/1",
+      "samples": 1,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 1,
+        "properties": {
+          "beta": {
+            "kind": "boolean",
+            "count": 1
+          },
+          "email": {
+            "kind": "string",
+            "count": 1,
+            "formats": [
+              "email"
+            ]
+          },
+          "id": {
+            "kind": "integer",
+            "count": 1
+          }
+        }
+      }
+    },
+    "POST api.shop.test /api/orders/:id/items/:id 2xx": {
+      "example": "https://api.shop.test/api/orders/7/items/9",
+      "samples": 2,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 2,
+        "properties": {
+          "data": {
+            "kind": "union",
+            "variants": [
+              {
+                "kind": "array",
+                "count": 1,
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "kind": "integer",
+                  "count": 2
+                }
+              },
+              {
+                "kind": "object",
+                "count": 1,
+                "properties": {
+                  "qty": {
+                    "kind": "integer",
+                    "count": 1
+                  }
+                }
+              }
+            ]
+          },
+          "ok": {
+            "kind": "boolean",
+            "count": 2
+          }
+        }
+      }
+    },
+    "users": {
+      "samples": 1,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 1,
+        "properties": {
+          "id": {
+            "kind": "integer",
+            "count": 1
+          }
+        }
+      }
+    }
+  }
+}

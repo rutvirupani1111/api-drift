@@ -7,6 +7,7 @@
  *   diff           Shape vs Shape -> Change[]
  *   generateTypes  Baseline -> TypeScript / Zod source
  *   importHar      HAR export -> Baseline
+ *   toOpenApi      Baseline -> OpenAPI 3.1 document (JSON Schema 2020-12)
  *
  * Renderers (terminal text, markdown, trees) live in `api-drift/report`.
  */
@@ -62,4 +63,6 @@ export { importHar } from './har';
 export type { HarLike, HarImportOptions, HarImportResult, HarImportStats, HarSkipReason } from './har';
 export { generateTypes, shapeToSource, typeNameForKey } from './typegen';
 export type { TypegenOptions } from './typegen';
+export { toOpenApi, shapeToJsonSchema, openApiPath, openApiToJson, toYaml, unmappedKeys } from './openapi';
+export type { OpenApiOptions, OpenApiDocument, JsonSchema } from './openapi';
 export { fnv1a, stableStringify, parseDuration } from './util';

@@ -26,7 +26,7 @@ describe('cli: basics', () => {
     expect((await ws.cli(['--version'])).stdout.trim()).toMatch(/^\d+\.\d+\.\d+/);
     const help = await ws.cli(['--help']);
     expect(help.code).toBe(0);
-    for (const c of ['init', 'snapshot', 'check', 'import-har', 'diff', 'types', 'explain']) expect(help.stdout).toContain(c);
+    for (const c of ['init', 'snapshot', 'check', 'import-har', 'diff', 'types', 'openapi', 'explain']) expect(help.stdout).toContain(c);
     const sub = await ws.cli(['help', 'check']);
     expect(sub.stdout).toContain('--fail-on <level>');
     expect((await ws.cli(['types', '--help'])).stdout).toContain('--zod');
@@ -236,6 +236,31 @@ describe('cli: import-har, types, explain', () => {
     expect(z.stdout).toContain('✔ Wrote Zod schemas for 1 endpoint to src/schemas.ts');
     expect(ws.read('src/schemas.ts')).toContain("import { z } from 'zod';");
     expect((await ws.cli(['types', '--endpoint', 'nothing-matches'])).code).toBe(2);
+  });
+
+  it('openapi prints JSON, writes YAML and honours the flags', async () => {
+    await ws.cli(['import-har', 'session.har']);
+    const j = await ws.cli(['openapi']);
+    expect(j.code).toBe(0);
+    const doc = JSON.parse(j.stdout);
+    expect(doc.openapi).toBe('3.1.0');
+    expect(doc.info.title).toBe('api.shop.test');
+    expect(doc.servers).toEqual([{ url: 'https://api.shop.test' }]);
+    expect(Object.keys(doc.paths['/api/users/{userId}'].get.responses)).toEqual(['2XX', '4XX']);
+    expect(j.stdout).not.toContain('example');
+    const again = await ws.cli(['openapi']);
+    expect(again.stdout).toBe(j.stdout);
+    const y = await ws.cli(['openapi', '--out', 'spec/openapi.yaml', '--title', 'Shop API', '--api-version', '2.0.0', '--endpoint', 'users']);
+    expect(y.code).toBe(0);
+    expect(y.stdout).toContain('✔ Wrote OpenAPI 3.1 (YAML): 1 path, 1 operation to spec/openapi.yaml');
+    const yaml = ws.read('spec/openapi.yaml');
+    expect(yaml.startsWith('openapi: 3.1.0\ninfo:\n')).toBe(true);
+    expect(yaml).toContain('  title: Shop API\n');
+    expect(yaml).toContain('  version: 2.0.0\n');
+    expect(yaml).not.toContain('/api/cart');
+    expect((await ws.cli(['openapi', '--yaml'])).stdout.startsWith('openapi: 3.1.0\n')).toBe(true);
+    expect((await ws.cli(['openapi', '--endpoint', 'nothing-matches'])).code).toBe(2);
+    expect((await ws.cli(['openapi', '--help'])).stdout).toContain('--yaml');
   });
 
   it('explain lists endpoints, prints trees and handles ambiguity', async () => {

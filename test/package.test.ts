@@ -36,13 +36,14 @@ describe('package', () => {
   });
 
   it.each(['src/core/index.ts', 'src/index.ts', 'src/report.ts', 'src/axios.ts'])(
-    '%s is browser-safe (no Node built-ins) and under 12 KB min+gzip',
+    '%s is browser-safe (no Node built-ins) and within its min+gzip budget',
     async (entry) => {
       const { imports, code, gzip } = await bundle(entry);
       expect(imports.filter((p) => p.startsWith('node:'))).toEqual([]);
       expect(code).not.toMatch(/\brequire\(/);
       expect(code).not.toMatch(/\bprocess\.(env|stdout|stderr|exit)/);
-      expect(gzip).toBeLessThan(12 * 1024);
+      // core carries the OpenAPI exporter (about 2.5 KB) on top of the runtime engine.
+      expect(gzip).toBeLessThan((entry === 'src/core/index.ts' ? 14 : 12) * 1024);
     },
   );
 

@@ -1,0 +1,225 @@
+{
+  "version": 1,
+  "generator": "api-drift@0.1.0",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
+  "endpoints": {
+    "GET api.shop.test /api/orders 2xx": {
+      "example": "https://api.shop.test/api/orders",
+      "samples": 2,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 2,
+        "properties": {
+          "data": {
+            "kind": "array",
+            "count": 2,
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "kind": "object",
+              "count": 3,
+              "properties": {
+                "currency": {
+                  "kind": "string",
+                  "count": 3,
+                  "formats": [
+                    "plain"
+                  ],
+                  "values": [
+                    "eur",
+                    "usd"
+                  ]
+                },
+                "id": {
+                  "kind": "string",
+                  "count": 3,
+                  "formats": [
+                    "plain"
+                  ]
+                },
+                "items": {
+                  "kind": "array",
+                  "count": 3,
+                  "minItems": 0,
+                  "maxItems": 1,
+                  "items": {
+                    "kind": "object",
+                    "count": 2,
+                    "properties": {
+                      "qty": {
+                        "kind": "integer",
+                        "count": 2
+                      },
+                      "sku": {
+                        "kind": "string",
+                        "count": 2,
+                        "formats": [
+                          "plain"
+                        ],
+                        "values": [
+                          "HOODIE-BLK-L",
+                          "TEE-RED-M"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "status": {
+                  "kind": "string",
+                  "count": 3,
+                  "formats": [
+                    "plain"
+                  ],
+                  "values": [
+                    "paid",
+                    "pending",
+                    "refunded"
+                  ]
+                },
+                "total": {
+                  "kind": "number",
+                  "count": 3,
+                  "integral": 1
+                }
+              }
+            }
+          },
+          "page": {
+            "kind": "integer",
+            "count": 2
+          }
+        }
+      }
+    },
+    "GET api.shop.test /api/users/:id 2xx": {
+      "example": "https://api.shop.test/api/users/1",
+      "samples": 3,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 3,
+        "properties": {
+          "avatar_url": {
+            "kind": "union",
+            "variants": [
+              {
+                "kind": "null",
+                "count": 1
+              },
+              {
+                "kind": "string",
+                "count": 2,
+                "formats": [
+                  "uri"
+                ]
+              }
+            ]
+          },
+          "created_at": {
+            "kind": "string",
+            "count": 3,
+            "formats": [
+              "date-time"
+            ]
+          },
+          "email": {
+            "kind": "string",
+            "count": 3,
+            "formats": [
+              "email"
+            ]
+          },
+          "id": {
+            "kind": "integer",
+            "count": 3
+          },
+          "name": {
+            "kind": "string",
+            "count": 3,
+            "formats": [
+              "plain"
+            ]
+          },
+          "nickname": {
+            "kind": "string",
+            "count": 1,
+            "formats": [
+              "plain"
+            ]
+          },
+          "role": {
+            "kind": "string",
+            "count": 3,
+            "formats": [
+              "plain"
+            ],
+            "values": [
+              "admin",
+              "member"
+            ]
+          }
+        }
+      }
+    },
+    "GET api.shop.test /api/users/:id 4xx": {
+      "example": "https://api.shop.test/api/users/999",
+      "samples": 1,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 1,
+        "properties": {
+          "error": {
+            "kind": "string",
+            "count": 1,
+            "formats": [
+              "plain"
+            ],
+            "values": [
+              "not_found"
+            ]
+          },
+          "message": {
+            "kind": "string",
+            "count": 1,
+            "formats": [
+              "plain"
+            ]
+          }
+        }
+      }
+    },
+    "POST api.shop.test /api/cart 2xx": {
+      "example": "https://api.shop.test/api/cart",
+      "samples": 1,
+      "firstSeen": "2026-10-23T00:00:00.000Z",
+      "lastSeen": "2026-10-23T00:00:00.000Z",
+      "shape": {
+        "kind": "object",
+        "count": 1,
+        "properties": {
+          "cart_id": {
+            "kind": "string",
+            "count": 1,
+            "formats": [
+              "plain"
+            ]
+          },
+          "items": {
+            "kind": "integer",
+            "count": 1
+          },
+          "subtotal": {
+            "kind": "number",
+            "count": 1,
+            "integral": 0
+          }
+        }
+      }
+    }
+  }
+}
